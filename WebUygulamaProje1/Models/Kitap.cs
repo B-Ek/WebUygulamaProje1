@@ -27,5 +27,7 @@ namespace WebUygulamaProje1.Models
         [ValidateNever]
         public string ResimUrl {  get; set; }
 
+        public int StokSayisi { get; set; }
+
     }
 }

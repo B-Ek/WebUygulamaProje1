@@ -23,15 +23,19 @@ namespace WebUygulamaProje1.Controllers
         }
 
         [Authorize(Roles = "Admin,Ogrenci")]
-        public IActionResult Index()
+        public IActionResult Index(string searchString)
         {
-           List<Kitap> objKitapList = _kitapRepository.GetAll(includeProps:"KitapTuru").ToList();
-           
+            ViewData["CurrentFilter"] = searchString;
+            List<Kitap> objKitapList = _kitapRepository.GetAll(includeProps: "KitapTuru").ToList();
 
-            //Veritabanına gidip kitapları çekip bu listeye alır 
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                objKitapList = objKitapList.Where(k => k.Yazar.Contains(searchString, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
             return View(objKitapList);
-
         }
+
 
         [Authorize(Roles = UserRoles.Role_Admin)]
 
@@ -41,31 +45,28 @@ namespace WebUygulamaProje1.Controllers
                 .Select(k => new SelectListItem { Text = k.Ad, Value = k.Id.ToString() });
             ViewBag.KitapTuruList = KitapTuruList;
 
-            if(id == null || id ==0)
+            if (id == null || id == 0)
             {
                 return View(); // ekleme
             }
             else
             {
-                //güncelleme
-                Kitap? kitapVt = _kitapRepository.Get(u => u.Id == id); //Expression<Func<T, bool>> filtre
+                Kitap? kitapVt = _kitapRepository.Get(u => u.Id == id);
                 if (kitapVt == null)
                 {
                     return NotFound();
                 }
-
                 return View(kitapVt);
             }
         }
 
-
         [HttpPost]
         [Authorize(Roles = UserRoles.Role_Admin)]
 
+        //
         public IActionResult EkleGuncelle(Kitap kitap, IFormFile? file)
         {
-           
-            if(ModelState.IsValid) // Kitap.cs dosyası içerisindeki requirementlearın sağlanmasını kontrol eder. 
+            if (ModelState.IsValid)
             {
                 string wwwRootPath = _webHostEnvironment.WebRootPath;
                 string kitapPath = Path.Combine(wwwRootPath, @"img");
@@ -75,26 +76,36 @@ namespace WebUygulamaProje1.Controllers
                     {
                         file.CopyTo(fileStream);
                     }
-
                     kitap.ResimUrl = @"\img\" + file.FileName;
                 }
-                
-                if(kitap.Id == 0)
+
+                if (kitap.Id == 0)
                 {
+                    kitap.StokSayisi = 1; // Yeni eklenen kitap için stok sayısını başlat
                     _kitapRepository.Ekle(kitap);
                     TempData["basarili"] = "Yeni Kitap Oluşturuldu!";
-
                 }
                 else
                 {
-                    _kitapRepository.Guncelle(kitap);
-                    TempData["basarili"] = "Yeni güncelleme Yapıldı!";
+                    var mevcutKitap = _kitapRepository.Get(k => k.Id == kitap.Id);
+                    if (mevcutKitap != null)
+                    {
+                        mevcutKitap.KitapAdi = kitap.KitapAdi;
+                        mevcutKitap.Tanim = kitap.Tanim;
+                        mevcutKitap.Yazar = kitap.Yazar;
+                        mevcutKitap.Fiyat = kitap.Fiyat;
+                        mevcutKitap.StokSayisi = kitap.StokSayisi;
+                        mevcutKitap.ResimUrl = kitap.ResimUrl;
 
+                        _kitapRepository.Guncelle(mevcutKitap);
+                        TempData["basarili"] = "Kitap güncellendi!";
+                    }
                 }
-                _kitapRepository.Kaydet();  // save changes yapılmaz ise veriler veritabanına eklenmez 
-            return RedirectToAction("Index","Kitap");// veritabanına kaydettikten sonra Indexi çağırır
+
+                _kitapRepository.Kaydet();
+                return RedirectToAction("Index", "Kitap");
             }
-            return View();
+            return View(kitap);
         }
 
         /*public IActionResult Guncelle(int? id)  koyulan soru işareti konulan parametrenin null olabilme ihtimalinde sistemin çökmemesi içindir.

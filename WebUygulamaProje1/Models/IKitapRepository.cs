@@ -1,8 +1,11 @@
-﻿namespace WebUygulamaProje1.Models
+﻿using System.Linq.Expressions;
+
+namespace WebUygulamaProje1.Models
 {
     public interface IKitapRepository: IRepository<Kitap>
     {
         void Guncelle(Kitap kitap);
         void Kaydet();
+        Kitap Get(Expression<Func<Kitap, bool>> filtre);
     }
 }

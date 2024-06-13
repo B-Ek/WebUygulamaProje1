@@ -11,7 +11,7 @@ namespace WebUygulamaProje1.Models
         {
             _uygulamaDbContext = uygulamaDbContext;
             this.dbSet = _uygulamaDbContext.Set<T>();
-            _uygulamaDbContext.Kitaplar.Include(k=>k.KitapTuru).Include(k=>k.KitapTuruId);
+            _uygulamaDbContext.Kitaplar.Include(k=>k.KitapTuru).Include(k=>k.KitapTuruId).Include(k=>k.StokSayisi);
         }
         public void SilAralik(IEnumerable<T> entities)
         {
@@ -54,6 +54,10 @@ namespace WebUygulamaProje1.Models
         public void Sil(T entity)
         {
             dbSet.Remove(entity);
+        }
+        public void Kaydet()
+        {
+            _uygulamaDbContext.SaveChanges();
         }
     }
 }
