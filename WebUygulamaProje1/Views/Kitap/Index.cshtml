@@ -1,5 +1,7 @@
-﻿@using WebUygulamaProje1.Utility
-@model List<Kitap>
+﻿@using WebUygulamaProje1.Models.WebUygulamaProje1.Models
+@using WebUygulamaProje1.Utility
+@model PaginatedList<Kitap>
+
 
 @if (TempData["basarili"] != null)
 {
@@ -65,6 +67,23 @@
             }
         </tbody>
     </table>
+
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link" asp-action="Index" asp-route-pageIndex="@(Model.PageIndex - 1)" asp-route-searchString="@ViewData["CurrentFilter"]">Previous</a>
+            </li>
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(Model.PageIndex == i ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-pageIndex="@i" asp-route-searchString="@ViewData["CurrentFilter"]">@i</a>
+                </li>
+            }
+            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link" asp-action="Index" asp-route-pageIndex="@(Model.PageIndex + 1)" asp-route-searchString="@ViewData["CurrentFilter"]">Next</a>
+            </li>
+        </ul>
+    </nav>
 
     @if (User.IsInRole(UserRoles.Role_Admin))
     {

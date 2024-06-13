@@ -2,7 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using WebUygulamaProje1.Models;
+using WebUygulamaProje1.Models.WebUygulamaProje1.Models;
 using WebUygulamaProje1.Utility;
+
+
 
 namespace WebUygulamaProje1.Controllers
 {
@@ -23,17 +26,20 @@ namespace WebUygulamaProje1.Controllers
         }
 
         [Authorize(Roles = "Admin,Ogrenci")]
-        public IActionResult Index(string searchString)
+        public IActionResult Index(string searchString, int pageIndex = 1)
         {
             ViewData["CurrentFilter"] = searchString;
-            List<Kitap> objKitapList = _kitapRepository.GetAll(includeProps: "KitapTuru").ToList();
+            var kitaplar = _kitapRepository.GetAll(includeProps: "KitapTuru");
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                objKitapList = objKitapList.Where(k => k.Yazar.Contains(searchString, StringComparison.OrdinalIgnoreCase)).ToList();
+                kitaplar = kitaplar.Where(k => k.Yazar.Contains(searchString, StringComparison.OrdinalIgnoreCase));
             }
 
-            return View(objKitapList);
+            int pageSize = 5; // Sayfa başına gösterilecek kitap sayısı
+            var paginatedList = PaginatedList<Kitap>.Create(kitaplar.AsQueryable(), pageIndex, pageSize);
+
+            return View(paginatedList);
         }
 
 
